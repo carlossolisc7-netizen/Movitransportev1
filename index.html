@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>moviTransporte - Puebla</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body, html { 
+            width: 100%; height: 100%; 
+            font-family: 'Roboto', sans-serif; 
+            background: #1a1a1a; overflow: hidden; 
+        }
+
+        #welcome-screen {
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+            z-index: 1000; display: flex;
+            flex-direction: column; align-items: center;
+            justify-content: center; color: white;
+            text-align: center;
+        }
+
+        .btn-capitulo {
+            width: 280px; padding: 20px;
+            margin: 15px 0; border: none;
+            border-radius: 15px; font-size: 18px;
+            font-weight: bold; cursor: pointer;
+            display: flex; align-items: center;
+            justify-content: center; gap: 15px;
+            transition: 0.3s;
+        }
+
+        #btn-rutas { background: #1E88E5; color: white; }
+        #btn-ia { background: #2d3561; color: white; }
+
+        #app-viewport {
+            width: 100%; height: 100%;
+            border: none; display: none;
+        }
+
+        #home-button {
+            position: fixed; bottom: 20px; right: 20px;
+            width: 50px; height: 50px;
+            background: #1E88E5; color: white;
+            border-radius: 50%; display: none;
+            align-items: center; justify-content: center;
+            font-size: 20px; z-index: 2000;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+</head>
+<body>
+
+    <div id="welcome-screen">
+        <h1 style="color: #1E88E5; font-size: 35px; margin-bottom: 5px;">MoviTransporte</h1>
+        <p style="opacity: 0.6; margin-bottom: 30px;">Puebla, MX</p>
+        
+        <button class="btn-capitulo" id="btn-rutas" onclick="lanzarArchivo('mejorasIndex.html')">
+            <i class="fas fa-map-marked-alt"></i> MAPA Y RUTAS
+        </button>
+        <div style="text-align: center; margin-top: 20px;">
+    <button onclick="abrirSugerencias()" style="background:#007bff; color:white; border:none; padding:12px 20px; border-radius:10px; font-weight:bold;">📩 Enviar Sugerencia</button>
+</div>
+
+<div id="ventanaSugerencias" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#1a1a1a; padding:20px; border-radius:15px; width:85%; z-index:9999; border:2px solid #007bff;">
+    <h3 style="color:white; margin-top:0;">¿Cómo mejoramos?</h3>
+    <textarea id="inputSugerencia" style="width:100%; height:100px; border-radius:10px; padding:10px; margin-bottom:10px;" placeholder="Escribe aquí..."></textarea>
+    <button onclick="enviarSugerencia()" style="background:#28a745; color:white; border:none; padding:10px; width:100%; border-radius:8px; font-weight:bold;">Enviar a MoviTransporte</button>
+    <button onclick="cerrarSugerencias()" style="background:none; color:gray; border:none; width:100%; margin-top:10px;">Cerrar</button>
+</div>
+
+        <button class="btn-capitulo" id="btn-ia" onclick="lanzarArchivo('ia.html')">
+            <i class="fas fa-robot"></i> ASISTENTE IA
+        </button>
+    </div>
+
+    <iframe id="app-viewport" src=""></iframe>
+
+    <div id="home-button" onclick="cerrarArchivo()">
+        <i class="fas fa-home"></i>
+    </div>
+
+    <script>
+        function lanzarArchivo(nombre) {
+            const viewport = document.getElementById('app-viewport');
+            const welcome = document.getElementById('welcome-screen');
+            const homeBtn = document.getElementById('home-button');
+
+            // Agregamos ?v= al final para que el celular NO use la versión vieja guardada
+            viewport.src = nombre + "?v=" + Date.now();
+            
+            welcome.style.display = 'none';
+            viewport.style.display = 'block';
+            homeBtn.style.display = 'flex';
+        }
+
+        function cerrarArchivo() {
+            const viewport = document.getElementById('app-viewport');
+            const welcome = document.getElementById('welcome-screen');
+            const homeBtn = document.getElementById('home-button');
+
+            viewport.src = "";
+            viewport.style.display = 'none';
+            welcome.style.display = 'flex';
+            homeBtn.style.display = 'none';
+        }
+    </script>
+    <script>
+  // 1. Configuración (PON TUS DATOS AQUÍ)
+  const firebaseConfig = {
+    apiKey: "AIzaSyD9BM3GgPH0Fpta5AOv0gzpTZ0RJDepE-k",
+    authDomain: "movitransporte-puebla.firebaseapp.com",
+    projectId: "movitransporte-puebla",
+    storageBucket: "movitransporte-puebla.firebasestorage.app",
+    messagingSenderId: "1026517136643",
+    appId: "1:1026517136643:web:595273b5f87b2a5228a536"
+  };
+
+  // 2. Inicialización
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  const dbPortal = firebase.firestore();
+
+  // 3. Funciones de la ventana
+  function abrirSugerencias() {
+    document.getElementById('ventanaSugerencias').style.display = 'block';
+  }
+
+  function cerrarSugerencias() {
+    document.getElementById('ventanaSugerencias').style.display = 'none';
+  }
+
+  // 4. Enviar a Firebase
+  function enviarSugerencia() {
+    const texto = document.getElementById('inputSugerencia').value;
+    
+    if (texto.trim() === "") {
+      alert("No puedes enviar una sugerencia vacía.");
+      return;
+    }
+
+    dbPortal.collection("sugerencias").add({
+      contenido: texto,
+      fecha: new Date().toLocaleString(),
+      ubicacion: "Puebla - Portada"
+    })
+    .then(() => {
+      alert("¡Gracias! Tu sugerencia ya está en nuestra base de datos.");
+      document.getElementById('inputSugerencia').value = "";
+      cerrarSugerencias();
+    })
+    .catch((error) => {
+      alert("Error al conectar. Verifica tus llaves de Firebase.");
+      console.error(error);
+    });
+  }
+</script>
+
+</body>
+</html>
